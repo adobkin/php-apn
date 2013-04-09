@@ -1,5 +1,6 @@
 <?php
 /**
+ * Send Push Notification
  * @package php-apn
  */
 
