@@ -10,9 +10,14 @@ The extension is licensed under the [PHP 3.01](http://www.php.net/license/3_01.t
 
 ##REQUIREMENTS##
 
-* capn library (http://libcapn.org)
+* capn library ([http://libcapn.org](http://libcapn.org))
 * capn library headers (to build extension)
 * PHP 5.3+ SDK (to build extension)
+* libtool (to build extension)
+
+##DOCUMENTATION##
+
+[View documentation](http://libcapn.org/php-apn/doc/html/packages/php-apn.html)
 
 ##TODO##
 
@@ -93,7 +98,7 @@ if(apn_connect($apn, APN_SANDBOX, $error)) {
         echo 'Could not sent push notification: ' . $error;
     }
 } else {
-    echo 'Could not connected to Apple Push Notification Servece: ' . $error;
+    echo 'Could not connected to Apple Push Notification Service: ' . $error;
 }
 
 apn_close($apn);
