@@ -1,0 +1,11 @@
+ARG_WITH("apn", "Apple Push Notification Service support", "no");
+
+if (PHP_APN != "no") {
+	if (CHECK_LIB("capn.lib", "apn", PHP_APN) &&
+		CHECK_HEADER_ADD_INCLUDE("capn/apn.h", "CFLAGS_APN")) {
+		EXTENSION("apn", "php_apn.c");
+	} else {
+		WARNING("apn not enabled; libraries and headers not found");
+	}
+
+}
