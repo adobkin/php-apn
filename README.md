@@ -25,7 +25,7 @@ The extension is licensed under the [PHP 3.01](http://www.php.net/license/3_01.t
 
 ##EXAMPLE##
 
-__Exapmle one:__
+__Example one:__
 
 ```php
 
@@ -64,7 +64,7 @@ apn_payload_free($payload);
 apn_free($apn);
 ```
 
-__Exapmle two:__ 
+__Example two:__ 
 
 ```php
 
