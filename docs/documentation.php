@@ -16,19 +16,20 @@
  * The payload specifies how the user of an application on a device is to
  * be alerted.
  *
- * @package php-apn
+ * @license   http://www.php.net/license/3_01.txt PHP 3.01
+ * @link      http://libcapn.org/php-apn
  *
  */
 
 /**
- * Specifies that "production" server shall be used. This is the default mode
+ * APN_PRODUCTION Specifies that "production" server shall be used. This is the default mode
  */
-define('APN_PODUCTION', 16);
+define('APN_PRODUCTION', 0);
 
 /**
  * Specifies that "sandbox" server shall be used
  */
-define('APN_SANDBOX', 32);
+define('APN_SANDBOX', 1);
 
 /**
  * Creates a new Apple Push Notification resource which is needed to hold the data for a connection to
@@ -38,7 +39,7 @@ define('APN_SANDBOX', 32);
  * for it
  *
  * @category Apple Push Notification Service
- * @return resource|NULL Returns a APNs link identifier on success or NULL on failure.
+ * @return resource|null Returns a APNs link identifier on success or null on failure.
  */
 function apn_init() {}
 
@@ -49,11 +50,13 @@ function apn_init() {}
  * @category Apple Push Notification Service
  * @param resource $apn Resource returned by apn_init(). If a non-resource is used for the apn,
  * an error of level E_WARNING will be emitted
- * @param string|NULL $error A reference to return error information. Pass NULL, if information should not
+ * @param string|null $error A reference to return error message. Pass null, if message should not
+ * be returned
+ * @param int|null $errcode A reference to return error code. Pass null, if code should not
  * be returned
  * @return bool Returns TRUE on success or FALSE on failure
  */
-function apn_connect($apn, &$error){}
+function apn_connect($apn, &$error, &$errcode){}
 
 /**
  * Closes Apple Push Notification/Feedback Service connection
@@ -77,6 +80,31 @@ function apn_close($apn){}
 function apn_free($apn){}
 
 /**
+ * Sets connection mode
+ *
+ * Each connection limited to one of two modes, each with its own assigned IP address:
+ *
+ * APN_PRODUCTION - Use the production mode when building the production version of the provider
+ * application.  This mode uses gateway.push.apple.com, outbound TCP port 2195.
+ *
+ * APN_SANDBOX -  Use the sandbox mode for initial development and testing of the provider
+ * application. It provides the same set of services as the production mode. The sandbox mode also acts
+ * as a virtual device, enabling simulated end-to-end testing. This mode uses
+ * gateway.sandbox.push.apple.com, outbound TCP port 2195.
+ *
+ * You must get separate certificates for the sandbox mode and the production mode.
+ *
+ * Default mode is :APN_PRODUCTION
+ *
+ * @category Apple Push Notification Service
+ * @since 1.0.0
+ * @param resource $apn Apple Push Notification Resource returned by apn_init(). If a non-resource is used for the apn,
+ * an error of level E_WARNING will be emitted
+ * @param int $mode Mode APN_PRODUCTION or APN_SANDBOX
+ */
+function apn_set_mode($apn, $mode){}
+
+/**
  * Sets path to an SSL certificate which will be used to establish secure connection
  *
  * @category Apple Push Notification Service
@@ -94,9 +122,10 @@ function apn_set_certificate($apn, $certificate){}
  * @param resource $apn Apple Push Notification Resource returned by apn_init(). If a non-resource is used for the apn,
  * an error of level E_WARNING will be emitted
  * @param string $private_key Path to a private key file
+ * @param string|null $private_key_pass Private key passphrase or null
  * @return bool Returns TRUE on success or FALSE on failure
  */
-function apn_set_private_key($apn, $private_key){}
+function apn_set_private_key($apn, $private_key, $private_key_pass = null){}
 
 /**
  * Adds a device token
@@ -131,72 +160,39 @@ function apn_add_tokens($apn, array $tokens){}
 /**
  * Set multiple apn options
  *
+ * Valid options are:
+ *
+ * <ul>
+ * <li>mode - Sets connection mode</li>
+ * <li>certificate - path to an SSL certificate</li>
+ * <li>private_key - path to a private key</li>
+ * <li>private_key_pass - private key passphrase</li>
+ * <li>tokens - array of device tokens</li>
+ * </ul>
+ *
  * @category Apple Push Notification Service
  * @param resource $apn Apple Push Notification Resource returned by apn_init(). If a non-resource is used for the apn,
  * an error of level E_WARNING will be emitted
- * @param array $options An associative array specifying which options to set and their values. Valid options are:
- * <li>certificate - path to an SSL certificate</li>
- * <li>private_key - path to a private key</li>
- * <li>tokens - array of tokens</li>
+ * @param array $options An associative array specifying which options to set and their values
  * @return bool Returns TRUE on success or FALSE on failure
  */
 function apn_set_array($apn, array $options){}
 
 /**
- * Returns a path to private key which used to establish secure connection
- *
- * @category Apple Push Notification Service
- * @param resource $apn Apple Push Notification Resource returned by apn_init(). If a non-resource is used for the apn,
- * an error of level E_WARNING will be emitted
- * @return string|NULL Returns string on success, or NULL on failure
- */
-function apn_get_private_key($apn){}
-
-/**
- * Returns a path to an SSL certificate used to establish secure connection
- *
- * @category Apple Push Notification Service
- * @param resource $apn Apple Push Notification Resource returned by apn_init(). If a non-resource is used for the apn,
- * an error of level E_WARNING will be emitted
- * @return string|NULL Returns string on success, or NULL on failure
- */
-function apn_get_certificate($apn){}
-
-/**
- * Returns an array of device tokens which should receive the notification
- *
- * @category Apple Push Notification Service
- * @param resource $apn Apple Push Notification Resource returned by apn_init(). If a non-resource is used for the apn,
- * an error of level E_WARNING will be emitted
- * @return array|NULL Returns tokens array on success, or NULL on failure
- */
-function apn_get_tokens($apn){}
-
-/**
- * Returns array that contains apn options
- *
- * @category Apple Push Notification Service
- * @api
- * @param resource $apn Apple Push Notification Resource returned by apn_init(). If a non-resource is used for the apn,
- * an error of level E_WARNING will be emitted
- * @return array|NULL Returns array on success, or NULL on failure
- */
-function apn_get_array($apn){}
-
-/**
  * Sends push notification
  *
- * @api
  * @category Apple Push Notification Service
  * @param resource $apn Apple Push Notification Resource returned by apn_init(). If a non-resource is used for the apn,
  * an error of level E_WARNING will be emitted
  * @param resource $payload Apple Push Notification Payload Resource returned by apn_payload_init(). If a non-resource is used for the apn,
  * an error of level E_WARNING will be emitted
- * @param string|NULL $error A reference to return error information. Pass NULL, if information should not
+ * @param string|null $error A reference to return error message. Pass null, if message should not
+ * be returned
+ * @param int|null $errcode A reference to return error code. Pass null, if code should not
  * be returned
  * @return bool Returns TRUE on success or FALSE on failure
  */
-function apn_send($apn, $payload, &$error){}
+function apn_send($apn, $payload, &$error, &$errcode){}
 
 /**
  * Creates a new Apple Push Notification Payload resource
@@ -232,6 +228,24 @@ function apn_payload_free($payload){}
  * @return bool Returns TRUE on success or FALSE on failure
  */
 function apn_payload_set_badge($payload, $badge){}
+
+/**
+ * Sets expiration time of notification
+ *
+ * Expiration time is a fixed UNIX epoch date expressed in seconds (UTC) that identifies when the notification
+ * is no longer valid and can be discarded. You can specify zero or a value less than zero
+ * to request that APNs not store the notification at all.
+ * Default value is 0.
+ *
+ * @since 1.0.0
+ *
+ * @category Apple Push Notification Payload
+ * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
+ * used for the apn, an error of level E_WARNING will be emitted
+ * @param integer $expiry Time in seconds
+ * @return bool Returns TRUE on success or FALSE on failure
+ */
+function apn_payload_set_expiry($payload, $expiry){}
 
 /**
  * Sets a text of the alert message
@@ -271,7 +285,7 @@ function apn_payload_set_sound($payload, $sound){}
  * @param array $args Array of string values to appear in place of the format specifiers in `key`
  * @return bool Returns TRUE on success or FALSE on failure
  */
-function apn_payload_set_localized_key($payload, $localized_key, array $args){}
+function apn_payload_set_localized_key($payload, $localized_key, array $args = null){}
 
 /**
  * Sets a filename of an image file in the application bundle
@@ -305,106 +319,45 @@ function apn_payload_set_launch_image($payload, $launch_image){}
 function apn_payload_set_localized_action_key($payload, $localized_action_key){}
 
 /**
- * Returns a number to display as the badge of the application icon
+ * Adds a device token to payload
  *
+ * Device token are used for identification of targets
+ * which will receive the notification
+ *
+ * @since 1.0.0
+ * @see apn_add_tokens()
+ * @see apn_payload_add_tokens()
  * @category Apple Push Notification Payload
  * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
  * used for the apn, an error of level E_WARNING will be emitted
- * @return integer|NULL Returns integer on success, or NULL on failure
- */
-function apn_payload_get_badge($payload){}
-
-/**
- * Returns a text of an alert message
- *
- * @category Apple Push Notification Payload
- * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
- * used for the apn, an error of level E_WARNING will be emitted
- * @return string|NULL Returns string on success, or NULL on failure
- */
-function apn_payload_get_body($payload){}
-
-/**
- * Returns a name of a sound file in the application bundle which played as an alert
- *
- * @category Apple Push Notification Payload
- * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
- * used for the apn, an error of level E_WARNING will be emitted
- * @return string|NULL Returns string on success, or NULL on failure
- */
-function apn_payload_get_sound($payload){}
-
-/**
- * Returns a key used to get a localized alert-message string
- *
- * @category Apple Push Notification Payload
- * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
- * used for the apn, an error of level E_WARNING will be emitted
- * @return string|NULL Returns string on success, or NULL on failure
- */
-function apn_payload_get_localized_key($payload){}
-
-/**
- * Returns an array of strings to appear in place of the format specifiers in localized alert-message string
- *
- * @category Apple Push Notification Payload
- * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
- * used for the apn, an error of level E_WARNING will be emitted
- * @return array|NULL Returns array on success, or NULL on failure
- */
-function apn_payload_get_localized_key_args($payload){}
-
-/**
- * Returns a filename of an image file in the application bundle used as a launch image
- *
- * @category Apple Push Notification Payload
- * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
- * used for the apn, an error of level E_WARNING will be emitted
- * @return string|NULL Returns string on success, or NULL on failure
- */
-function apn_payload_get_launch_image($payload){}
-
-/**
- * Returns a key used to get a localized string for the right button’s
- * caption instead of "View"
- *
- * @category Apple Push Notification Payload
- * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
- * used for the apn, an error of level E_WARNING will be emitted
- * @return string|NULL Returns string on success, or NULL on failure
- */
-function apn_payload_get_localized_action_key($payload){}
-
-/**
- * Adds a custom property  to notification payload
- *
- * @category Apple Push Notification Payload
- * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
- * used for the apn, an error of level E_WARNING will be emitted
- * @param string $key
- * @param mixed $value
+ * @param string $token Device token
  * @return bool Returns TRUE on success or FALSE on failure
  */
-function apn_payload_add_custom_property($payload, $key, $value){}
+function apn_payload_add_token($payload, $token){}
 
 /**
- * Returns array that contains payload properties
+ * Adds a device tokens to payload
  *
+ * Device token are used for identification of targets
+ * which will receive the notification
+ *
+ * @since 1.0.0
+ * @see apn_add_token()
+ * @see apn_payload_add_token()
  * @category Apple Push Notification Payload
  * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
  * used for the apn, an error of level E_WARNING will be emitted
- * @return array|NULL Returns array on success, or NULL on failure
+ * @param array $tokens Device tokens
+ * @return bool Returns TRUE on success or FALSE on failure
  */
-function apn_payload_get_array($payload){}
+function apn_payload_add_tokens($payload, array $tokens){}
 
 /**
  * Set multiple payload properties
  *
- * @category Apple Push Notification Payload
- * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
- * used for the apn, an error of level E_WARNING will be emitted
- * @param array $options An associative array specifying which payload properties to set and their values.
  * Valid properties are:
+ *
+ * <ul>
  * <li>badge - number to display as a badge on the application icon</li>
  * <li>sound - name of a sound file in the application bundle</li>
  * <li>body - text of an alert message</li>
@@ -413,8 +366,45 @@ function apn_payload_get_array($payload){}
  * <li>localized_action_key - key used to get a localized string for the right button’s
  * caption instead of "View"</li>
  * <li>launch_image - filename of an image file in the application bundle</li>
+ * <li>tokens - array of device tokens</li>
+ * <li>expiry - expiration time of notification</li>
+ * </ul>
+ *
+ * @category Apple Push Notification Payload
+ * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
+ * used for the apn, an error of level E_WARNING will be emitted
+ * @param array $properties An associative array specifying which payload properties to set and their values
  * @return bool Returns TRUE on success or FALSE on failure
  */
-function apn_payload_set_array($payload, array $options){}
+function apn_payload_set_array($payload, array $properties){}
+
+/**
+ * Opens Apple Push Feedback Service connection
+ *
+ * @see apn_close()
+ * @category Apple Push Feedback Service
+ * @param resource $apn Resource returned by apn_init(). If a non-resource is used for the apn,
+ * an error of level E_WARNING will be emitted
+ * @param string|null $error A reference to return error message. Pass null, if message should not
+ * be returned
+ * @param int|null $errcode A reference to return error code. Pass null, if code should not
+ * be returned
+ * @return bool Returns TRUE on success or FALSE on failure
+ */
+function apn_feedback_connect($apn, &$error, &$errcode){}
 
 
+/**
+ * Returns array of device tokens which no longer exists
+ *
+ * @see apn_feedback_connect()
+ * @category Apple Push Feedback Service
+ * @param resource $apn Resource returned by apn_init(). If a non-resource is used for the apn,
+ * an error of level E_WARNING will be emitted
+ * @param string|null $error A reference to return error message. Pass null, if message should not
+ * be returned
+ * @param int|null $errcode A reference to return error code. Pass null, if code should not
+ * be returned
+ * @return array|null Returns array of devices token on success or null on failure
+ */
+function apn_feedback($apn, &$error, &$errcode){}

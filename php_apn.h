@@ -32,17 +32,15 @@ extern zend_module_entry apn_module_entry;
 #define PHP_FE_END {NULL, NULL, NULL,}
 #endif
 
-#define APN_EXTENSION_VERSION "0.9"
+#define APN_EXTENSION_VERSION "1.0.0"
 
 #define LE_APN_NAME           "Apple Push Notification"
 #define LE_APN_PAYLOAD_NAME   "Apple Push Notification Payload"
 
-#define APN_MODE_PODUCTION 0x10
-#define APN_MODE_SANDBOX 0x20
-
 ZEND_BEGIN_MODULE_GLOBALS(apn)
     char *apn_certificate;
     char *apn_private_key;
+    char *apn_private_key_pass;
 ZEND_END_MODULE_GLOBALS(apn)
 
 PHP_MINIT_FUNCTION(apn);
@@ -57,35 +55,29 @@ PHP_FUNCTION(apn_connect);
 PHP_FUNCTION(apn_close);
 PHP_FUNCTION(apn_set_certificate);
 PHP_FUNCTION(apn_set_private_key);
+PHP_FUNCTION(apn_set_mode);
 PHP_FUNCTION(apn_add_token);
 PHP_FUNCTION(apn_add_tokens);
 PHP_FUNCTION(apn_set_array);
 
 PHP_FUNCTION(apn_send);
 
-PHP_FUNCTION(apn_get_certificate);
-PHP_FUNCTION(apn_get_private_key);
-PHP_FUNCTION(apn_get_tokens);
-PHP_FUNCTION(apn_get_array);
-
 PHP_FUNCTION(apn_payload_init);
 PHP_FUNCTION(apn_payload_free);
 PHP_FUNCTION(apn_payload_set_badge);
 PHP_FUNCTION(apn_payload_set_body);
 PHP_FUNCTION(apn_payload_set_sound);
+PHP_FUNCTION(apn_payload_set_expiry);
+PHP_FUNCTION(apn_payload_add_token);
+PHP_FUNCTION(apn_payload_add_tokens);
 PHP_FUNCTION(apn_payload_set_localized_key);
 PHP_FUNCTION(apn_payload_set_launch_image);
 PHP_FUNCTION(apn_payload_set_localized_action_key);
 PHP_FUNCTION(apn_payload_set_array);
-PHP_FUNCTION(apn_payload_get_badge);
-PHP_FUNCTION(apn_payload_get_body);
-PHP_FUNCTION(apn_payload_get_sound);
-PHP_FUNCTION(apn_payload_get_localized_key);
-PHP_FUNCTION(apn_payload_get_localized_key_args);
-PHP_FUNCTION(apn_payload_get_launch_image);
-PHP_FUNCTION(apn_payload_get_localized_action_key);
 PHP_FUNCTION(apn_payload_add_custom_property);
-PHP_FUNCTION(apn_payload_get_array);
+
+PHP_FUNCTION(apn_feedback_connect);
+PHP_FUNCTION(apn_feedback);
 
 #ifdef ZTS
 #define PHP_APN_G(v) TSRMG(apn_globals_id, zend_apn_globals *, v)
