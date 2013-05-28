@@ -26,7 +26,6 @@
 
 #include "php_apn.h"
 
-static void __php_apn_error(int type, const char *format, ...);
 static zval *__php_apn_payload_array(apn_payload_ctx_ref payload TSRMLS_DC);
 
 ZEND_DECLARE_MODULE_GLOBALS(apn)
@@ -35,7 +34,7 @@ ZEND_DECLARE_MODULE_GLOBALS(apn)
     do { \
         __res = (apn_ctx_ref) zend_list_find(__res_id, &__rsrc_type); \
          if (NULL == __res || __rsrc_type != le_apn) {  \
-             __php_apn_error(E_WARNING, "invalid resource provided"); \
+             php_error_docref(NULL TSRMLS_CC, E_WARNING, "invalid resource provided"); \
              __ret_value; \
          } \
     } while(0);
@@ -44,7 +43,7 @@ ZEND_DECLARE_MODULE_GLOBALS(apn)
     do { \
         __res = (apn_payload_ctx_ref) zend_list_find(__res_id, &__rsrc_type); \
          if (NULL == __res || __rsrc_type != le_payload) {  \
-             __php_apn_error(E_WARNING, "invalid resource provided"); \
+             php_error_docref(NULL TSRMLS_CC, E_WARNING, "invalid resource provided"); \
              __ret_value; \
          } \
     } while(0);
@@ -52,11 +51,11 @@ ZEND_DECLARE_MODULE_GLOBALS(apn)
 #define PHP_APN_OPTION_CHECK_STRING(__option_name, __option_value, __operator) \
 { \
     if(Z_TYPE_PP(__option_value) != IS_STRING) { \
-        __php_apn_error(E_WARNING, "incorrect value type of `%s'. Expected string, got %s",  __option_name, __php_apn_var_type(*__option_value)); \
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect value type of `%s'. Expected string, got %s",  __option_name, __php_apn_var_type(*__option_value)); \
         __operator; \
     } \
     if(Z_TYPE_PP(__option_value) == IS_STRING && Z_STRLEN_PP(__option_value) == 0) { \
-        __php_apn_error(E_WARNING, "value of `%s' cannot be empty", __option_name);  \
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "value of `%s' cannot be empty", __option_name);  \
         __operator; \
     } \
 }
@@ -298,19 +297,6 @@ ZEND_GET_MODULE(apn)
 static int le_apn = -1;
 static int le_payload = -1;
 
-static void __php_apn_error(int type, const char *format, ...) {
-    TSRMLS_FETCH();
-    char buff[1024];
-    char *space = NULL;
-    const char *class_name = get_active_class_name(&space TSRMLS_CC);
-    va_list args;
-    snprintf(&buff[0], sizeof (buff) - 1, "%s%s%s(): ", class_name, space, get_active_function_name(TSRMLS_C));
-    va_start(args, format);
-    vsnprintf(&buff[strlen(buff)], sizeof (buff) - strlen(buff) - 1, format, args);
-    va_end(args);
-    zend_error(type, "%s", buff);
-}
-
 static const char *__php_apn_var_type(zval *var) {
     switch (Z_TYPE_P(var)) {
         case IS_BOOL:
@@ -364,17 +350,6 @@ static int __php_apn_payload_get_option_code(const char *option) {
     return -1;
 }
 
-//void __php_apn_carray_to_phparray(zval **php_array, char **carray, unsigned int carray_size TSRMLS_DC) {
-//    unsigned int i = 0;
-//    zval *array = NULL;
-//    MAKE_STD_ZVAL(array)
-//    array_init(array);
-//    for(i = 0; i< carray_size; i++) {
-//        add_index_string(array, i, carray[i], 1);
-//    }
-//    *php_array = array;
-//}
-
 static uint16_t __php_apn_phparray_to_carray(zval *php_array, char ***carray TSRMLS_DC) {
     HashPosition pointer_position = NULL;
     int array_key_type = 0;
@@ -384,16 +359,16 @@ static uint16_t __php_apn_phparray_to_carray(zval *php_array, char ***carray TSR
     zval **array_item = NULL;
     char **array = NULL;
     uint16_t array_size = 0;
-	char **tmp = NULL;
+    char **tmp = NULL;
 
-	*carray = NULL; 
+    *carray = NULL; 
     
     for (zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(php_array), &pointer_position);
             SUCCESS == zend_hash_has_more_elements_ex(Z_ARRVAL_P(php_array), &pointer_position); zend_hash_move_forward_ex(Z_ARRVAL_P(php_array), &pointer_position)) {
         array_key_type = zend_hash_get_current_key_ex(Z_ARRVAL_P(php_array), &array_strkey, &array_strkey_len, &array_numkey, 0, &pointer_position);
         
         if (HASH_KEY_IS_LONG != array_key_type) {
-            __php_apn_error(E_WARNING, "key of array must be integer, got string");
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "key of array must be integer, got string");
             continue;
         }
                   
@@ -486,7 +461,7 @@ PHP_FUNCTION(apn_init) {
     }
 
     if (apn_init(&apn_ctx, NULL, NULL, NULL, &error)) {
-        __php_apn_error(E_ERROR, "unable to initialize: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "unable to initialize: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
         apn_error_free(&error);
         RETURN_NULL();
     }
@@ -503,7 +478,7 @@ PHP_FUNCTION(apn_connect) {
     zval *ref_errcode = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|zz", &res, &ref_error, &ref_errcode)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
@@ -532,7 +507,7 @@ PHP_FUNCTION(apn_close) {
     int rsrc_type = 0;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &res)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
@@ -546,7 +521,7 @@ PHP_FUNCTION(apn_free) {
     zval *res = NULL;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &res) == FAILURE) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
@@ -567,18 +542,18 @@ PHP_FUNCTION(apn_set_certificate) {
     apn_error_ref error = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &res, &value, &value_len)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (value_len == 0) {
-        __php_apn_error(E_WARNING, "SSL certificate is not specified");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "SSL certificate is not specified");
         RETURN_FALSE
     }
     
     if (apn_set_certificate(apn_ctx, value, &error)) {
-        __php_apn_error(E_WARNING, "failed to set SSL certificate: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set SSL certificate: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -593,13 +568,13 @@ PHP_FUNCTION(apn_set_mode) {
     apn_error_ref error = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &res, &mode)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (apn_set_mode(apn_ctx, mode, NULL)) {
-        __php_apn_error(E_WARNING, "failed to set mode: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set mode: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -617,17 +592,17 @@ PHP_FUNCTION(apn_set_private_key) {
     apn_error_ref error = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs|s", &res, &key, &key_len, &key_pass, &key_pass_len)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (key_len == 0) {
-        __php_apn_error(E_WARNING, "private key is not specified");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "private key is not specified");
         RETURN_FALSE
     }
     if (apn_set_private_key(apn_ctx, key, key_pass, NULL)) {
-        __php_apn_error(E_WARNING, "failed to set SSL private key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set SSL private key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -637,11 +612,11 @@ PHP_FUNCTION(apn_set_private_key) {
 static uint8_t __php_apn_add_token(apn_ctx_ref apn_ctx, const char *token, uint32_t token_length) {
     apn_error_ref error = NULL;
     if (token_length == 0) {
-        __php_apn_error(E_WARNING, "device token is not specified");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "device token is not specified");
         return 1;
     }
     if (apn_add_token(apn_ctx, token, &error)) {
-        __php_apn_error(E_WARNING, "failed to add device token '%s': %s (%d)",  token, apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to add device token '%s': %s (%d)",  token, apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         return 1;
     }
@@ -658,7 +633,7 @@ static uint8_t __php_apn_add_tokens(apn_ctx_ref apn_ctx TSRMLS_DC, zval *tokens)
     zval **array_item = NULL;
     
     if (Z_TYPE_P(tokens) != IS_ARRAY) {
-        __php_apn_error(E_WARNING, "failed to add device tokens: incorrect type of second argumet. Excepted array, got %s", __php_apn_var_type(tokens));
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to add device tokens: incorrect type of second argumet. Excepted array, got %s", __php_apn_var_type(tokens));
         return 1;
     }
 
@@ -667,13 +642,13 @@ static uint8_t __php_apn_add_tokens(apn_ctx_ref apn_ctx TSRMLS_DC, zval *tokens)
         array_key_type = zend_hash_get_current_key_ex(Z_ARRVAL_P(tokens), &array_strkey, &array_strkey_len, &array_numkey, 0, &pointer_position);
         
         if (HASH_KEY_IS_LONG != array_key_type) {
-            __php_apn_error(E_WARNING, "failed to add device token: key of array must be integer, got string");
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to add device token: key of array must be integer, got string");
             return 1;
         }
         
         if (SUCCESS == zend_hash_get_current_data_ex(Z_ARRVAL_P(tokens), (void**) &array_item, &pointer_position)) {
             if (Z_TYPE_PP(array_item) != IS_STRING) {
-                __php_apn_error(E_WARNING, "failed to add device token: device token must be string, got `%s'", __php_apn_var_type(*array_item));
+                php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to add device token: device token must be string, got `%s'", __php_apn_var_type(*array_item));
                 return 1;
             }
             if(__php_apn_add_token(apn_ctx, Z_STRVAL_PP(array_item), Z_STRLEN_PP(array_item))){
@@ -693,7 +668,7 @@ PHP_FUNCTION(apn_add_token) {
     zval *res = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &res, &value, &value_len)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
@@ -712,7 +687,7 @@ PHP_FUNCTION(apn_add_tokens) {
     int rsrc_type = 0;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rz", &res, &array)) {
-        RETURN_FALSE
+        return;
     }
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
    
@@ -740,13 +715,13 @@ PHP_FUNCTION(apn_set_array) {
     char *private_key_pass = NULL;
     
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rz", &res, &array)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (Z_TYPE_P(array) != IS_ARRAY) {
-        __php_apn_error(E_WARNING, "incorrect type of second argumet. Excepted array, got %s", __php_apn_var_type(array));
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect type of second argumet. Excepted array, got %s", __php_apn_var_type(array));
         RETURN_FALSE
     }
     
@@ -766,7 +741,7 @@ PHP_FUNCTION(apn_set_array) {
                 case APN_OPTION_CERTIFIACE:
                     PHP_APN_OPTION_CHECK_STRING(array_strkey, array_item, continue);
                     if (apn_set_certificate(apn_ctx, Z_STRVAL_PP(array_item), &error)) {
-                        __php_apn_error(E_WARNING, "failed to set certificate: %s (%d)",  apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set certificate: %s (%d)",  apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
                         apn_error_free(&error);
                         RETURN_FALSE
                     }
@@ -781,10 +756,10 @@ PHP_FUNCTION(apn_set_array) {
                     break;
                 case APN_OPTION_MODE:
                     if(Z_TYPE_PP(array_item) != IS_LONG) {
-                        __php_apn_error(E_WARNING, "incorrect value type of `%s'. Expected numeric, got %s",  array_strkey, __php_apn_var_type(*array_item));     
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect value type of `%s'. Expected numeric, got %s",  array_strkey, __php_apn_var_type(*array_item));     
                         RETURN_FALSE
                     } else if (apn_set_mode(apn_ctx, (uint8_t)Z_LVAL_PP(array_item), &error)) {
-                        __php_apn_error(E_WARNING, "failed to set mode: %s (%d)",  apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set mode: %s (%d)",  apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
                         apn_error_free(&error);
                         RETURN_FALSE
                     }
@@ -800,19 +775,19 @@ PHP_FUNCTION(apn_set_array) {
                             RETURN_FALSE
                         }
                     } else {
-                        __php_apn_error(E_WARNING, "incorrect value type of `%s'. Expected string or array, got %s",  array_strkey, __php_apn_var_type(*array_item)); 
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect value type of `%s'. Expected string or array, got %s",  array_strkey, __php_apn_var_type(*array_item)); 
                         RETURN_FALSE
                     }
                     break;
                 default:
-                    __php_apn_error(E_WARNING, "unknown option: `%s'", array_strkey);
+                    php_error_docref(NULL TSRMLS_CC, E_WARNING, "unknown option: `%s'", array_strkey);
             }
        }
     }    
     
     if(private_key) {
         if (apn_set_private_key(apn_ctx, private_key, private_key_pass, &error)) {
-            __php_apn_error(E_WARNING, "failed to set private key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set private key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
             apn_error_free(&error);
             RETURN_FALSE
         }
@@ -836,7 +811,7 @@ PHP_FUNCTION(apn_send) {
     zval *payload_res = NULL;
 	
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rr|zzz", &res, &payload_res, &ref_error, &ref_errcode) == FAILURE) {
-        RETURN_FALSE
+        return;
     }
     
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
@@ -863,11 +838,11 @@ PHP_FUNCTION(apn_send) {
 static uint8_t __php_apn_payload_add_token(apn_payload_ctx_ref payload_ctx, const char *token, uint32_t token_length) {
     apn_error_ref error = NULL;
     if (token_length == 0) {
-        __php_apn_error(E_WARNING, "device token is not specified");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "device token is not specified");
         return 1;
     }
     if (apn_payload_add_token(payload_ctx, token, &error)) {
-        __php_apn_error(E_WARNING, "failed to add device token '%s': %s (%d)",  token, apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to add device token '%s': %s (%d)",  token, apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         return 1;
     }
@@ -884,7 +859,7 @@ static uint8_t __php_apn_payload_add_tokens(apn_payload_ctx_ref payload_ctx TSRM
     zval **array_item = NULL;
     
     if (Z_TYPE_P(tokens) != IS_ARRAY) {
-        __php_apn_error(E_WARNING, "failed to add device tokens: incorrect type of second argumet. Excepted array, got %s", __php_apn_var_type(tokens));
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to add device tokens: incorrect type of second argumet. Excepted array, got %s", __php_apn_var_type(tokens));
         return 1;
     }
 
@@ -893,13 +868,13 @@ static uint8_t __php_apn_payload_add_tokens(apn_payload_ctx_ref payload_ctx TSRM
         array_key_type = zend_hash_get_current_key_ex(Z_ARRVAL_P(tokens), &array_strkey, &array_strkey_len, &array_numkey, 0, &pointer_position);
         
         if (HASH_KEY_IS_LONG != array_key_type) {
-            __php_apn_error(E_WARNING, "failed to add device token: key of array must be integer, got string");
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to add device token: key of array must be integer, got string");
             return 1;
         }
         
         if (SUCCESS == zend_hash_get_current_data_ex(Z_ARRVAL_P(tokens), (void**) &array_item, &pointer_position)) {
             if (Z_TYPE_PP(array_item) != IS_STRING) {
-                __php_apn_error(E_WARNING, "failed to add device token: device token must be string, got `%s'", __php_apn_var_type(*array_item));
+                php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to add device token: device token must be string, got `%s'", __php_apn_var_type(*array_item));
                 return 1;
             }
             if(__php_apn_payload_add_token(payload_ctx, Z_STRVAL_PP(array_item), Z_STRLEN_PP(array_item))) {
@@ -919,7 +894,7 @@ PHP_FUNCTION(apn_payload_init) {
     }
     
     if (apn_payload_init(&payload, &error)) {
-        __php_apn_error(E_ERROR, "unable to initialize: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "unable to initialize: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
         apn_error_free(&error);
         RETURN_NULL();
     }
@@ -933,7 +908,7 @@ PHP_FUNCTION(apn_payload_free) {
     zval *res = NULL;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &res) == FAILURE) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
@@ -953,13 +928,13 @@ PHP_FUNCTION(apn_payload_set_badge) {
     apn_error_ref error = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &res, &badge)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (apn_payload_set_badge(payload, (uint16_t)badge, &error)) {
-        __php_apn_error(E_WARNING, "failed to set badge: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set badge: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -975,17 +950,17 @@ PHP_FUNCTION(apn_payload_set_body) {
     apn_error_ref error = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &res, &value, &value_len)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (value_len == 0) {
-        __php_apn_error(E_WARNING, "body is not specified");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "body is not specified");
         RETURN_FALSE
     }
     if (apn_payload_set_body(payload, value, &error)) {
-        __php_apn_error(E_WARNING, "failed to set alert message: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set alert message: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -1001,17 +976,17 @@ PHP_FUNCTION(apn_payload_set_sound) {
     apn_error_ref error = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &res, &value, &value_len)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (value_len == 0) {
-        __php_apn_error(E_WARNING, "sound file name is not specified");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "sound file name is not specified");
         RETURN_FALSE
     }
     if (apn_payload_set_sound(payload, value, &error)) {
-        __php_apn_error(E_WARNING, "failed to set sound: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set sound: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -1031,25 +1006,25 @@ PHP_FUNCTION(apn_payload_set_localized_key) {
     apn_error_ref error = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rsz", &res, &value, &value_len, &array)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (value_len == 0) {
-        __php_apn_error(E_WARNING, "localization key is not set");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "localization key is not set");
         RETURN_FALSE
     }
     
     if(Z_TYPE_P(array) != IS_ARRAY) {
-        __php_apn_error(E_WARNING, "incorrect value type of second argument. Expected array, got %s", __php_apn_var_type(array));        
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect value type of second argument. Expected array, got %s", __php_apn_var_type(array));        
         RETURN_FALSE
     }
     
     args_count = __php_apn_phparray_to_carray(array, &args TSRMLS_CC); 
     
     if (apn_payload_set_localized_key(payload, value, args, args_count, &error)) {
-        __php_apn_error(E_WARNING, "failed to set localized key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set localized key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -1066,18 +1041,18 @@ PHP_FUNCTION(apn_payload_set_launch_image) {
     apn_error_ref error = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &res, &value, &value_len)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (value_len == 0) {
-        __php_apn_error(E_WARNING, "launch image file name is not set");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "launch image file name is not set");
         RETURN_FALSE
     }
 
     if (apn_payload_set_launch_image(payload, value, &error)) {
-        __php_apn_error(E_WARNING, "failed to set launch image file name: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set launch image file name: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -1094,18 +1069,18 @@ PHP_FUNCTION(apn_payload_set_localized_action_key) {
     apn_error_ref error = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &res, &value, &value_len)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (value_len == 0) {
-        __php_apn_error(E_WARNING, "localization key is not set");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "localization key is not set");
         RETURN_FALSE
     }
 
     if (apn_payload_set_localized_action_key(payload, value, &error)) {
-        __php_apn_error(E_WARNING, "failed to set action key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set action key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -1123,13 +1098,13 @@ PHP_FUNCTION(apn_payload_add_custom_property) {
     apn_error_ref error = NULL;
     
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rsz", &res, &key, &key_len, &value)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
     
     if (key_len == 0) {
-        __php_apn_error(E_WARNING, "property name is not set");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "property name is not set");
         RETURN_FALSE
     }
     
@@ -1150,12 +1125,12 @@ PHP_FUNCTION(apn_payload_add_custom_property) {
             apn_payload_add_custom_property_null(payload, key, &error);
             break;
         default:
-            __php_apn_error(E_WARNING, "unsupported type of property value");
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "unsupported type of property value");
             RETURN_FALSE
     }
     
     if(error) {
-        __php_apn_error(E_WARNING, "failed to set custom property: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set custom property: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -1171,13 +1146,13 @@ PHP_FUNCTION(apn_payload_set_expiry) {
     apn_error_ref error = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &res, &expiry)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (apn_payload_set_expiry(payload, expiry, &error)) {
-        __php_apn_error(E_WARNING, "failed to set expiry: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set expiry: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
         apn_error_free(&error);
         RETURN_FALSE
     }
@@ -1193,7 +1168,7 @@ PHP_FUNCTION(apn_payload_add_token) {
     zval *res = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &res, &value, &value_len)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
@@ -1212,7 +1187,7 @@ PHP_FUNCTION(apn_payload_add_tokens) {
     int rsrc_type = 0;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rz", &res, &array)) {
-        RETURN_FALSE
+        return;
     }
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
    
@@ -1242,13 +1217,13 @@ PHP_FUNCTION(apn_payload_set_array) {
     int flag = -1;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rz", &res, &array)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
 
     if (Z_TYPE_P(array) != IS_ARRAY) {
-        __php_apn_error(E_WARNING, "incorrect type of second argumet. Excepted array, got %s", __php_apn_var_type(array));
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect type of second argumet. Excepted array, got %s", __php_apn_var_type(array));
         RETURN_FALSE
     }
     
@@ -1267,20 +1242,20 @@ PHP_FUNCTION(apn_payload_set_array) {
             switch(flag) { 
                 case APN_PAYLOAD_OPTION_EXPIRY:
                     if(Z_TYPE_PP(array_item) != IS_LONG) {
-                        __php_apn_error(E_WARNING, "incorrect value type of `%s'. Expected numeric, got %s",  array_strkey, __php_apn_var_type(*array_item));     
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect value type of `%s'. Expected numeric, got %s",  array_strkey, __php_apn_var_type(*array_item));     
                         RETURN_FALSE
                     } else if (apn_payload_set_expiry(payload, (uint32_t)Z_LVAL_PP(array_item), &error)) {
-                        __php_apn_error(E_WARNING, "failed to set expiry: %s (%d)",  apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set expiry: %s (%d)",  apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
                         apn_error_free(&error);
                         RETURN_FALSE
                     }
                     break;
                 case APN_PAYLOAD_OPTION_BADGE:
                     if(Z_TYPE_PP(array_item) != IS_LONG) {
-                        __php_apn_error(E_WARNING, "incorrect value type of `%s'. Expected numeric, got %s",  array_strkey, __php_apn_var_type(*array_item));     
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect value type of `%s'. Expected numeric, got %s",  array_strkey, __php_apn_var_type(*array_item));     
                         RETURN_FALSE
                     } else if (apn_payload_set_badge(payload, (int32_t)Z_LVAL_PP(array_item), &error)) {
-                        __php_apn_error(E_WARNING, "failed to set badge: %s (%d)",  apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set badge: %s (%d)",  apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
                         apn_error_free(&error);
                         RETURN_FALSE
                     }
@@ -1288,7 +1263,7 @@ PHP_FUNCTION(apn_payload_set_array) {
                 case APN_PAYLOAD_OPTION_LAUNCH_IMAGE:
                     PHP_APN_OPTION_CHECK_STRING(array_strkey, array_item, continue);
                     if (apn_payload_set_launch_image(payload, Z_STRVAL_PP(array_item), &error)) {
-                        __php_apn_error(E_WARNING, "failed to set launch image file name: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set launch image file name: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
                         apn_error_free(&error);
                         RETURN_FALSE
                     }
@@ -1296,7 +1271,7 @@ PHP_FUNCTION(apn_payload_set_array) {
                 case APN_PAYLOAD_OPTION_LOC_ACTION_KEY:
                     PHP_APN_OPTION_CHECK_STRING(array_strkey, array_item, continue);
                     if (apn_payload_set_localized_action_key(payload, Z_STRVAL_PP(array_item), &error)) {
-                        __php_apn_error(E_WARNING, "failed to set localized action key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set localized action key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
                         apn_error_free(&error);
                         RETURN_FALSE
                     }
@@ -1304,7 +1279,7 @@ PHP_FUNCTION(apn_payload_set_array) {
                 case APN_PAYLOAD_OPTION_SOUND:
                     PHP_APN_OPTION_CHECK_STRING(array_strkey, array_item, continue);
                     if (apn_payload_set_sound(payload, Z_STRVAL_PP(array_item), &error)) {
-                        __php_apn_error(E_WARNING, "failed to set sound file name: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set sound file name: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
                         apn_error_free(&error);
                         RETURN_FALSE
                     }
@@ -1312,7 +1287,7 @@ PHP_FUNCTION(apn_payload_set_array) {
                 case APN_PAYLOAD_OPTION_BODY:
                     PHP_APN_OPTION_CHECK_STRING(array_strkey, array_item, continue);
                     if (apn_payload_set_body(payload, Z_STRVAL_PP(array_item), &error)) {
-                        __php_apn_error(E_WARNING, "failed to set body: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set body: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
                         apn_error_free(&error);
                         RETURN_FALSE
                     }
@@ -1326,7 +1301,7 @@ PHP_FUNCTION(apn_payload_set_array) {
                     if (Z_TYPE_PP(array_item) == IS_ARRAY) {
                         args_count = __php_apn_phparray_to_carray(*array_item, &args TSRMLS_CC);
                     } else {
-                        __php_apn_error(E_WARNING, "incorrect value type of `%s'. Expected array, got %s", array_strkey, __php_apn_var_type(*array_item));
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect value type of `%s'. Expected array, got %s", array_strkey, __php_apn_var_type(*array_item));
                         RETURN_FALSE
                     }
                     break;
@@ -1340,19 +1315,19 @@ PHP_FUNCTION(apn_payload_set_array) {
                             RETURN_FALSE
                         }
                     } else {
-                        __php_apn_error(E_WARNING, "incorrect value type of `%s'. Expected string or array, got %s",  array_strkey, __php_apn_var_type(*array_item)); 
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect value type of `%s'. Expected string or array, got %s",  array_strkey, __php_apn_var_type(*array_item)); 
                         RETURN_FALSE
                     }
                     break;
                 default:
-                    __php_apn_error(E_WARNING, "unknown option: `%s'", array_strkey);
+                    php_error_docref(NULL TSRMLS_CC, E_WARNING, "unknown option: `%s'", array_strkey);
             }
         }
     }
 
     if (loc_key && loc_key_length > 0) {
         if (apn_payload_set_localized_key(payload, loc_key, args, args_count, &error)) {
-            __php_apn_error(E_WARNING, "failed to set localized key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set localized key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
             apn_error_free(&error);
             RETURN_FALSE
         }
@@ -1370,7 +1345,7 @@ PHP_FUNCTION(apn_feedback_connect) {
     zval *ref_errcode = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|zz", &res, &ref_error, &ref_errcode)) {
-        RETURN_FALSE
+        return;
     }
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
@@ -1406,7 +1381,7 @@ PHP_FUNCTION(apn_feedback) {
     zval *php_tokens = NULL;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|zz", &res, &ref_error, &ref_errcode)) {
-        RETURN_NULL()
+        return;
     }
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
@@ -1422,7 +1397,7 @@ PHP_FUNCTION(apn_feedback) {
     if(apn_feedback(apn_ctx, &tokens, &tokens_count, &error)) {        
         ZVAL_STRING(ref_error, apn_error_message(error), 1);
         ZVAL_LONG(ref_errcode, APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
-        __php_apn_error(E_WARNING, "failed to set localized key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set localized key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
             
         apn_error_free(&error);
         RETURN_NULL()
