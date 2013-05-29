@@ -21,7 +21,13 @@ The extension is licensed under the [PHP 3.01](http://www.php.net/license/3_01.t
 
 Just run the following as root:
 
-`pecl install package.xml`
+`pecl install apn`
+
+or 
+
+- `cd php-apn`
+- `pecl install package.xml`
+
 
 ###MANUAL###
 
