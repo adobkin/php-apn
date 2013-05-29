@@ -15,6 +15,30 @@ The extension is licensed under the [PHP 3.01](http://www.php.net/license/3_01.t
 * PHP 5.3+ SDK (to build extension)
 * libtool (to build extension)
 
+##INSTALLATION##
+
+###AUTOMATIC###
+
+Just run the following as root:
+
+`pecl install apn`
+
+or 
+
+- `cd php-apn`
+- `pecl install package.xml`
+
+
+###MANUAL###
+
+To install this module type the following:
+
+- `cd php-apn`
+- `phpize`
+- `./configure`
+- `make`
+- `make install`
+
 ##DOCUMENTATION##
 
 [View documentation](http://libcapn.org/php-apn/doc/html)
