@@ -2,9 +2,9 @@
 <package xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
     <name>apn</name>
     <channel>pecl.php.net</channel>
-    <summary>An extension for sending push notifications on iOS and OS X devices from within your PHP code</summary>
+    <summary>An extension for sending push notifications to iOS and OS X devices from within your PHP code</summary>
     <description>
-	apn is a PHP extension to introduce simple yet powerful interface for sending push notifications on iOS 
+	apn is a PHP extension to introduce simple yet powerful interface for sending push notifications to iOS 
 	and OS X devices from within your PHP code
     </description>
     <lead>
