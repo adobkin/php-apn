@@ -50,10 +50,6 @@
     	    <pearinstaller>
     		<min>1.4.0a1</min>
     	    </pearinstaller>
-	    <package>
-		<name>libcapn</name>
-		<uri>http://libcapn.org/download/libcapn-1.0.0b3-src.tar.gz</uri>
-	    </package>
 	    <os>
 		<name>unix</name>
 	    </os>
