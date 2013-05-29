@@ -50,12 +50,6 @@
     	    <pearinstaller>
     		<min>1.4.0a1</min>
     	    </pearinstaller>
-	    <os>
-		<name>unix</name>
-	    </os>
-	    <os>
-		<name>windows</name>
-	    </os>
 	</required>
     </dependencies>
     <providesextension>apn</providesextension>
