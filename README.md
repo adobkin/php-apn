@@ -1,6 +1,6 @@
 #php-apn#
 
-php-apn is a PHP module, wrapping [libcapn](http://libcapn.org) C library to introduce simple yet powerful interface for sending push notifications on iOS and OS X (>= 10.8) devices from within your PHP code, making integration with Apple Push Notification Service as easy as possible.
+php-apn is a PHP module, wrapping [libcapn](http://libcapn.org) C library to introduce simple yet powerful interface for sending push notifications to iOS and OS X (>= 10.8) devices from within your PHP code, making integration with Apple Push Notification Service as easy as possible.
 
 Please visit [libcapn.org/php-apn](http://libcapn.org/php-apn) for more information
 
