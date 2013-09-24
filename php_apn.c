@@ -609,7 +609,7 @@ PHP_FUNCTION(apn_set_private_key) {
     RETURN_TRUE
 }
 
-static uint8_t __php_apn_add_token(apn_ctx_ref apn_ctx, const char *token, uint32_t token_length) {
+static uint8_t __php_apn_add_token(apn_ctx_ref apn_ctx, const char *token, uint32_t token_length TSRMLS_DC) {
     apn_error_ref error = NULL;
     if (token_length == 0) {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "device token is not specified");
@@ -651,7 +651,7 @@ static uint8_t __php_apn_add_tokens(apn_ctx_ref apn_ctx TSRMLS_DC, zval *tokens)
                 php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to add device token: device token must be string, got `%s'", __php_apn_var_type(*array_item));
                 return 1;
             }
-            if(__php_apn_add_token(apn_ctx, Z_STRVAL_PP(array_item), Z_STRLEN_PP(array_item))){
+            if(__php_apn_add_token(apn_ctx, Z_STRVAL_PP(array_item), Z_STRLEN_PP(array_item) TSRMLS_CC)){
                 return 1;
             }
         }
@@ -673,7 +673,7 @@ PHP_FUNCTION(apn_add_token) {
 
     PHP_APN_FETCH_RESOURCE(apn_ctx, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
     
-    if(__php_apn_add_token(apn_ctx, value, value_len)) {
+    if(__php_apn_add_token(apn_ctx, value, value_len TSRMLS_CC)) {
         RETURN_FALSE
     }
     
@@ -771,7 +771,7 @@ PHP_FUNCTION(apn_set_array) {
                             RETURN_FALSE
                         }
                     } else if(Z_TYPE_PP(array_item) == IS_STRING) {
-                        if(__php_apn_add_token(apn_ctx, Z_STRVAL_PP(array_item), Z_STRLEN_PP(array_item))){
+                        if(__php_apn_add_token(apn_ctx, Z_STRVAL_PP(array_item), Z_STRLEN_PP(array_item) TSRMLS_CC)){
                             RETURN_FALSE
                         }
                     } else {
@@ -835,7 +835,7 @@ PHP_FUNCTION(apn_send) {
 
 /* Payload */
 
-static uint8_t __php_apn_payload_add_token(apn_payload_ctx_ref payload_ctx, const char *token, uint32_t token_length) {
+static uint8_t __php_apn_payload_add_token(apn_payload_ctx_ref payload_ctx, const char *token, uint32_t token_length TSRMLS_DC) {
     apn_error_ref error = NULL;
     if (token_length == 0) {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "device token is not specified");
@@ -877,7 +877,7 @@ static uint8_t __php_apn_payload_add_tokens(apn_payload_ctx_ref payload_ctx TSRM
                 php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to add device token: device token must be string, got `%s'", __php_apn_var_type(*array_item));
                 return 1;
             }
-            if(__php_apn_payload_add_token(payload_ctx, Z_STRVAL_PP(array_item), Z_STRLEN_PP(array_item))) {
+            if(__php_apn_payload_add_token(payload_ctx, Z_STRVAL_PP(array_item), Z_STRLEN_PP(array_item) TSRMLS_CC)) {
                 return 1;
             }
         }
@@ -1173,7 +1173,7 @@ PHP_FUNCTION(apn_payload_add_token) {
 
     PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
     
-    if(__php_apn_payload_add_token(payload, value, value_len)) {
+    if(__php_apn_payload_add_token(payload, value, value_len TSRMLS_CC)) {
         RETURN_FALSE
     }
     
@@ -1311,7 +1311,7 @@ PHP_FUNCTION(apn_payload_set_array) {
                             RETURN_FALSE
                         }
                     } else if(Z_TYPE_PP(array_item) == IS_STRING) {
-                        if(__php_apn_payload_add_token(payload, Z_STRVAL_PP(array_item), Z_STRLEN_PP(array_item))){
+                        if(__php_apn_payload_add_token(payload, Z_STRVAL_PP(array_item), Z_STRLEN_PP(array_item) TSRMLS_CC)){
                             RETURN_FALSE
                         }
                     } else {
