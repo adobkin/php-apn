@@ -46,3 +46,7 @@ To install this module type the following:
 ##EXAMPLE##
 
 [View examples](http://libcapn.org/php-apn/doc/html/examples.html)
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/adobkin/php-apn/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
