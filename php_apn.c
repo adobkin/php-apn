@@ -826,6 +826,9 @@ PHP_FUNCTION(apn_send) {
     
     if(apn_send(apn_ctx, payload, &error)) {        
         ZVAL_STRING(ref_error, apn_error_message(error), 1);    
+        if(APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)) == APN_ERR_TOKEN_INVALID) {
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid token: %s", apn_error_invalid_token(error));
+        }
         ZVAL_LONG(ref_errcode, APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
         RETURN_FALSE
     }           
