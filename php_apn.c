@@ -1396,9 +1396,7 @@ PHP_FUNCTION(apn_feedback) {
     
     if(apn_feedback(apn_ctx, &tokens, &tokens_count, &error)) {        
         ZVAL_STRING(ref_error, apn_error_message(error), 1);
-        ZVAL_LONG(ref_errcode, APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set localized key: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));
-            
+        ZVAL_LONG(ref_errcode, APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));            
         apn_error_free(&error);
         RETURN_NULL()
     }  
