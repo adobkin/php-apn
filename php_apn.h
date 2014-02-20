@@ -32,7 +32,7 @@ extern zend_module_entry apn_module_entry;
 #define PHP_FE_END {NULL, NULL, NULL,}
 #endif
 
-#define PHP_MYEXTNAME_VERSION "1.0.3"
+#define PHP_APN_VERSION "1.0.3"
 
 #define LE_APN_NAME           "Apple Push Notification"
 #define LE_APN_PAYLOAD_NAME   "Apple Push Notification Payload"
