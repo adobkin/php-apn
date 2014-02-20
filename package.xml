@@ -24,7 +24,10 @@
     </stability>
     <license uri="http://www.php.net/license/3_01.txt">PHP 3.01</license>
     <notes>
-	- Fixed package.xml
+	- Fixed typo in constant name (APN_PODUCTION -> APN_PRODUCTION)
+    	- Incorrect warning message in apn_feedback()
+    	- Added "invalid token" warning in apn_send()
+    	- TSRM fixes
     </notes>
     <contents>
 	<dir name="/">
