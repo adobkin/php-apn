@@ -13,9 +13,9 @@
 	<email>adobkin@php.net</email>
 	<active>yes</active>
     </lead>
-    <date>2013-05-29</date>
+    <date>2014-02-20</date>
     <version>
-	<release>1.0.2</release>
+	<release>1.0.3</release>
 	<api>1.0.0</api>
     </version>
     <stability>
@@ -57,6 +57,23 @@
 	<configureoption default="no" name="with-apn" prompt="libcapn installation prefix"/>
     </extsrcrelease>
     <changelog>
+	<release>
+    	    <version>
+		<date></date>
+    		<release>1.0.3</release>
+    		<api>1.0.0</api>
+    	    </version>
+    	    <stability>
+    		<release>stable</release>
+    		<api>stable</api>
+    	    </stability>
+	    <notes>
+    		- Fixed typo in constant name (APN_PODUCTION -> APN_PRODUCTION)
+    		- Incorrect warning message in apn_feedback()
+    		- Added "invalid token" warning in apn_send()
+    		- TSRM fixes
+    	    </notes>
+	</release>
 	<release>
     	    <version>
 		<date></date>
