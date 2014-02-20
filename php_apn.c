@@ -286,7 +286,7 @@ zend_module_entry apn_module_entry = {
     PHP_RINIT(apn),
     PHP_RSHUTDOWN(apn),
     PHP_MINFO(apn),
-    APN_EXTENSION_VERSION,
+    PHP_MYEXTNAME_VERSION,
     STANDARD_MODULE_PROPERTIES
 };
 
@@ -446,7 +446,7 @@ PHP_RSHUTDOWN_FUNCTION(apn) {
 PHP_MINFO_FUNCTION(apn) {
     php_info_print_table_start();
     php_info_print_table_row(2, "Apple Push Notification Service support", "enabled");
-    php_info_print_table_row(2, "Extension Version", APN_EXTENSION_VERSION);
+    php_info_print_table_row(2, "Extension Version", PHP_MYEXTNAME_VERSION);
     php_info_print_table_row(2, "Version of libcapn", apn_version_string());
     php_info_print_table_end();
     DISPLAY_INI_ENTRIES();
