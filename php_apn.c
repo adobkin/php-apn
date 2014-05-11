@@ -94,7 +94,8 @@ enum __php_apn_payload_options_code {
     APN_PAYLOAD_OPTION_LOC_KEY,
     APN_PAYLOAD_OPTION_LOC_KEY_ARGS,
     APN_PAYLOAD_OPTION_TOKENS,
-    APN_PAYLOAD_OPTION_EXPIRY
+    APN_PAYLOAD_OPTION_EXPIRY,
+    APN_PAYLOAD_OPTION_CONTENT_AVAILABLE
 };
 
 typedef struct __php_apn_option {
@@ -119,7 +120,8 @@ static __php_apn_option __php_apn_payload_options[] = {
     {"localized_key", APN_PAYLOAD_OPTION_LOC_KEY},
     {"localized_key_args", APN_PAYLOAD_OPTION_LOC_KEY_ARGS},
     {"tokens", APN_PAYLOAD_OPTION_TOKENS},
-    {"expiry", APN_PAYLOAD_OPTION_EXPIRY}
+    {"expiry", APN_PAYLOAD_OPTION_EXPIRY},
+    {"content_available", APN_PAYLOAD_OPTION_CONTENT_AVAILABLE}
 };
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_apn_connect, 0, 0, 1)
@@ -187,6 +189,11 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(arginfo_apn_payload_set_badge, 0, 0, 2)
 ZEND_ARG_INFO(0, payload)
 ZEND_ARG_INFO(0, badge)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_apn_payload_set_content_available, 0, 0, 2)
+ZEND_ARG_INFO(0, payload)
+ZEND_ARG_INFO(0, content_available)
 ZEND_END_ARG_INFO()
         
 ZEND_BEGIN_ARG_INFO_EX(arginfo_apn_payload_set_body, 0, 0, 2)
@@ -264,6 +271,7 @@ const zend_function_entry apn_functions[] = {
     PHP_FE(apn_payload_add_token, arginfo_apn_payload_add_token)
     PHP_FE(apn_payload_add_tokens, arginfo_apn_payload_add_tokens)
     PHP_FE(apn_payload_set_badge, arginfo_apn_payload_set_badge)
+    PHP_FE(apn_payload_set_content_available, arginfo_apn_payload_set_content_available)
     PHP_FE(apn_payload_add_custom_property, arginfo_apn_payload_add_custom_property)
     PHP_FE(apn_payload_set_expiry, arginfo_apn_payload_set_expiry)
     PHP_FE(apn_payload_set_body, arginfo_apn_payload_set_body)
@@ -1163,6 +1171,28 @@ PHP_FUNCTION(apn_payload_set_expiry) {
     RETURN_TRUE
 }
 
+PHP_FUNCTION(apn_payload_set_content_available) {
+    int content_available = 0;
+    int rsrc_type = 0;
+    apn_payload_ctx_ref payload = NULL;
+    zval *res = NULL;
+    apn_error_ref error = NULL;
+
+    if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rb", &res, &content_available)) {
+        return;
+    }
+
+    PHP_APN_PAYLOAD_FETCH_RESOURCE(payload, Z_RESVAL_P(res), rsrc_type, RETURN_FALSE);
+
+    if (apn_payload_set_content_available(payload, content_available, &error)) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set content availability flag: %s (%d)", apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+        apn_error_free(&error);
+        RETURN_FALSE
+    }
+
+    RETURN_TRUE
+}
+
 PHP_FUNCTION(apn_payload_add_token) {
     char *value = NULL;
     int value_len = 0;
@@ -1263,6 +1293,16 @@ PHP_FUNCTION(apn_payload_set_array) {
                         RETURN_FALSE
                     }
                     break;
+                case APN_PAYLOAD_OPTION_CONTENT_AVAILABLE:
+            	    if(Z_TYPE_PP(array_item) != IS_BOOL) {
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "incorrect value type of `%s'. Expected bool, got %s",  array_strkey, __php_apn_var_type(*array_item));     
+                        RETURN_FALSE
+                    } else if (apn_payload_set_content_available(payload, (uint8_t)Z_BVAL_PP(array_item), &error)) {
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to set content availability flag: %s (%d)",  apn_error_message(error), APN_ERR_CODE_WITHOUT_CLASS(apn_error_code(error)));  
+                        apn_error_free(&error);
+                        RETURN_FALSE
+                    }
+            	    break;
                 case APN_PAYLOAD_OPTION_LAUNCH_IMAGE:
                     PHP_APN_OPTION_CHECK_STRING(array_strkey, array_item, continue);
                     if (apn_payload_set_launch_image(payload, Z_STRVAL_PP(array_item), &error)) {

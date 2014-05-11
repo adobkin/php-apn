@@ -230,6 +230,20 @@ function apn_payload_free($payload){}
 function apn_payload_set_badge($payload, $badge){}
 
 /**
+ * Sets a content availability flag
+ *
+ * Set this flag to true to indicate that new content is available.
+ * This is used to support Newsstand apps and background content downloads.
+ *
+ * @category Apple Push Notification Payload
+ * @param resource $payload Apple Push Notification Resource returned by apn_payload_init(). If a non-resource is
+ * used for the apn, an error of level E_WARNING will be emitted
+ * @param bool $content_available Content availability flag
+ * @return bool Returns TRUE on success or FALSE on failure
+ */
+function apn_payload_set_content_available($payload, $content_available){}
+
+/**
  * Sets expiration time of notification
  *
  * Expiration time is a fixed UNIX epoch date expressed in seconds (UTC) that identifies when the notification
@@ -368,6 +382,7 @@ function apn_payload_add_tokens($payload, array $tokens){}
  * <li>launch_image - filename of an image file in the application bundle</li>
  * <li>tokens - array of device tokens</li>
  * <li>expiry - expiration time of notification</li>
+ * <li>content_available - content availability flag</li>
  * </ul>
  *
  * @category Apple Push Notification Payload

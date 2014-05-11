@@ -68,6 +68,7 @@ PHP_FUNCTION(apn_payload_set_badge);
 PHP_FUNCTION(apn_payload_set_body);
 PHP_FUNCTION(apn_payload_set_sound);
 PHP_FUNCTION(apn_payload_set_expiry);
+PHP_FUNCTION(apn_payload_set_content_available);
 PHP_FUNCTION(apn_payload_add_token);
 PHP_FUNCTION(apn_payload_add_tokens);
 PHP_FUNCTION(apn_payload_set_localized_key);
