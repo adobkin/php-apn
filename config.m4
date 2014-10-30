@@ -58,11 +58,30 @@ if test "$PHP_APN" != "no"; then
       AC_MSG_RESULT([not found])
       AC_MSG_ERROR([libcapn is not found. Please visit to http://www.libcapn.org/php-apn for more information])
     fi
-
-    APN_LIBDIR=$APN_LIBDIR/capn
+    
+    APN_CONFIG=""
+    AC_MSG_CHECKING(for libcapn 2.0.0 or greater)
+        
+    if ${APN_DIR}/bin/capn-config --libs > /dev/null 2>&1; then
+	APN_CONFIG=${APN_DIR}/bin/capn-config
+    fi
+                                  
+    if test "x$APN_CONFIG" = "x"; then
+	 AC_MSG_ERROR(libcapn 2.0.0 or later is required)
+    fi
+                                         
+   APN_VERSION_NUM=`$APN_CONFIG --vernum`
+                                                 
+   if test "$APN_VERSION_NUM" -ge 20000; then
+	APN_VERSION=`$APN_CONFIG --version`
+        AC_MSG_RESULT($APN_VERSION)
+        APN_LIBS=`$APN_CONFIG --libs`
+    else
+	AC_MSG_ERROR(libcapn library version 2.0.0 or later is required)
+    fi
 
     PHP_ADD_INCLUDE($APN_INCDIR)
-    PHP_ADD_LIBRARY_WITH_PATH(capn, $APN_LIBDIR, APN_SHARED_LIBADD)
+    PHP_EVAL_LIBLINE("$APN_LIBS", APN_SHARED_LIBADD)
 
     PHP_SUBST(APN_SHARED_LIBADD)
     PHP_NEW_EXTENSION(apn, php_apn.c, $ext_shared)

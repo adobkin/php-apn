@@ -12,7 +12,7 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Author: Anton Dobkin <anton.dobkin@gmail.com>                           |
+  | Author: Anton Dobkin <anton.dobkin@gmail.com>                        |
   +----------------------------------------------------------------------+
 */
 
@@ -32,7 +32,7 @@ extern zend_module_entry apn_module_entry;
 #define PHP_FE_END {NULL, NULL, NULL,}
 #endif
 
-#define PHP_APN_VERSION "1.0.3"
+#define PHP_APN_VERSION "2.0.0"
 
 #define LE_APN_NAME           "Apple Push Notification"
 #define LE_APN_PAYLOAD_NAME   "Apple Push Notification Payload"
@@ -75,6 +75,8 @@ PHP_FUNCTION(apn_payload_set_localized_key);
 PHP_FUNCTION(apn_payload_set_launch_image);
 PHP_FUNCTION(apn_payload_set_localized_action_key);
 PHP_FUNCTION(apn_payload_set_array);
+PHP_FUNCTION(apn_payload_set_category);
+PHP_FUNCTION(apn_payload_set_priority);
 PHP_FUNCTION(apn_payload_add_custom_property);
 
 PHP_FUNCTION(apn_feedback_connect);
