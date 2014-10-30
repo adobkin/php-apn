@@ -4,19 +4,19 @@
 php-apn is a PHP module, wrapping [libcapn](https://github.com/adobkin/libcapn) C library to introduce simple yet powerful interface for sending push notifications to iOS and OS X (>= 10.8) devices 
 from within your PHP code, making integration with Apple Push Notification Service as easy as possible.
 
-## LICENSE
+### LICENSE
 
 The extension is licensed under the [PHP 3.01](http://www.php.net/license/3_01.txt) license; see LICENSE file.
 
-## REQUIREMENTS
+### REQUIREMENTS
 
-* __capn library v 2.0.0 or later__ ([https://github.com/adobkin/libcapn](https://github.com/adobkin/libcapn))
+* __capn library 2.0 or later__ ([https://github.com/adobkin/libcapn](https://github.com/adobkin/libcapn/tree/experimental))
 * PHP 5.3+ SDK
 * libtool
 * GCC or Clang (to build on Linux)
 * Microsoft Visual Studio 2008 or later (to build on Windows)
 
-## INSTALLATION
+### INSTALLATION
 
 To install this module type the following:
 
@@ -26,7 +26,7 @@ To install this module type the following:
 - `make`
 - `make install`
 
-## Example
+### Example
 
 #### Send notification
 
@@ -74,6 +74,6 @@ apn_payload_free($payload);
 apn_free($apn);
 ```
 
-## Changes
+### Changes
 
 __2.0.0 - 1.0.3__
